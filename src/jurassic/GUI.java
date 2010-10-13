@@ -6,6 +6,7 @@
  */
 package jurassic;
 
+import java.awt.Color;
 import java.awt.Toolkit;
 import java.io.BufferedReader;
 import java.io.File;
@@ -15,12 +16,14 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JColorChooser;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
 /**
  *
  * @author Michele Marcon
+ * http://127.0.0.1:8080/Netmanplus/vdiff?from=b7ea110444&to=trunk&detail=1
  */
 public class GUI extends javax.swing.JFrame {
 
@@ -33,7 +36,9 @@ public class GUI extends javax.swing.JFrame {
     String[] CLOSE = new String[]{"fossil", "close", repository};
     String[] ADD = new String[]{"fossil", "add", currentFossil};
     String[] STATUS = new String[]{"fossil", "status"};
-    String[] COMMIT = new String[]{"fossil", "commit"};
+    String[] DIFF = new String[]{"fossil", "diff"};
+    String[] COMMIT = new String[]{"fossil", "commit", "-m", null};
+    String[] BRANCH = new String[]{"fossil", "branch", "new", null, null, "-bgcolor", null, "--nosign"};
     String[] UPDATE = new String[]{"fossil", "update", null};
     String[] BACKUP = new String[]{"cmd", "/c", "copy", "*.fossil", "p:\\repositoryJurassic"};
     Process webserver;
@@ -105,7 +110,7 @@ public class GUI extends javax.swing.JFrame {
 
     private void setMuseum(String museum) {
         this.museum = museum;
-        setTitle("Jurassic 0.0.1 - " + museum);
+        setTitle("Jurassic 0.1.0 - " + museum);
         STARTWEBSERVER[2] = museum;
     }
 
@@ -154,6 +159,8 @@ public class GUI extends javax.swing.JFrame {
         jButton4 = new javax.swing.JButton();
         jComboBox1 = new javax.swing.JComboBox();
         jButton5 = new javax.swing.JButton();
+        jButton6 = new javax.swing.JButton();
+        jButton7 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -200,6 +207,20 @@ public class GUI extends javax.swing.JFrame {
             }
         });
 
+        jButton6.setText("Diff");
+        jButton6.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton6ActionPerformed(evt);
+            }
+        });
+
+        jButton7.setText("New branch");
+        jButton7.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton7ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -207,16 +228,20 @@ public class GUI extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 518, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jButton1)
-                        .addGap(18, 18, 18)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButton7)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jButton2)
                         .addGap(18, 18, 18)
                         .addComponent(jButton3)
-                        .addGap(18, 18, 18)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jButton6)
+                        .addGap(50, 50, 50)
                         .addComponent(jButton5)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 149, Short.MAX_VALUE)
+                        .addGap(104, 104, 104)
                         .addComponent(jButton4))
                     .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, 242, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap())
@@ -227,13 +252,15 @@ public class GUI extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton1)
-                    .addComponent(jButton2)
-                    .addComponent(jButton3)
                     .addComponent(jButton4)
-                    .addComponent(jButton5))
+                    .addComponent(jButton5)
+                    .addComponent(jButton6)
+                    .addComponent(jButton3)
+                    .addComponent(jButton2)
+                    .addComponent(jButton7))
                 .addGap(18, 18, 18)
                 .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 89, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 144, Short.MAX_VALUE)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
@@ -242,6 +269,10 @@ public class GUI extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        String comment=JOptionPane.showInputDialog(this, "Please input a commit comment", "Jurassic", JOptionPane.QUESTION_MESSAGE);
+        if (comment==null)
+            return;
+        COMMIT[3]=comment;
         exec(COMMIT);
     }//GEN-LAST:event_jButton1ActionPerformed
 
@@ -269,6 +300,26 @@ public class GUI extends javax.swing.JFrame {
             exec(UPDATE);
         }
     }//GEN-LAST:event_jButton5ActionPerformed
+
+    private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
+        exec(DIFF);
+    }//GEN-LAST:event_jButton6ActionPerformed
+
+    private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
+        String branchName=JOptionPane.showInputDialog(this, "Please input new branch name", "Jurassic", JOptionPane.QUESTION_MESSAGE);
+        if (branchName==null)
+            return;
+        String basis=JOptionPane.showInputDialog(this, "Please input the check-in basis for the new branch", "Jurassic", JOptionPane.QUESTION_MESSAGE);
+        if (basis==null)
+            return;
+        Color c=JColorChooser.showDialog(this, "Please choose a color for the new branch", Color.yellow);
+        if (c==null)
+            return;
+        BRANCH[3]=branchName;
+        BRANCH[4]=basis;
+        BRANCH[6]="#"+Integer.toHexString(c.getRGB()).substring(2);
+        exec(BRANCH);
+    }//GEN-LAST:event_jButton7ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -301,6 +352,8 @@ public class GUI extends javax.swing.JFrame {
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
     private javax.swing.JButton jButton5;
+    private javax.swing.JButton jButton6;
+    private javax.swing.JButton jButton7;
     private javax.swing.JComboBox jComboBox1;
     private javax.swing.JEditorPane jEditorPane1;
     private javax.swing.JScrollPane jScrollPane1;
