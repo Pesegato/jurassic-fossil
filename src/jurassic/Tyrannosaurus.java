@@ -10,7 +10,19 @@
  */
 package jurassic;
 
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Desktop;
+import java.awt.Toolkit;
+import java.net.URI;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JColorChooser;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableCellRenderer;
 import jurassic.GUI.EvolutionStep;
 
 /**
@@ -21,49 +33,77 @@ public class Tyrannosaurus extends javax.swing.JFrame {
 
     ArrayList<EvolutionStep> list;
     String projectName;
+    GUI gui;
+
+    String[] BRANCH = new String[]{"fossil", "branch", "new", null, null, "-bgcolor", null, "--nosign"};
+    String[] UPDATE = new String[]{"fossil", "update", null};
+    String[] MERGE = new String[]{"fossil", "merge", null};
 
     /** Creates new form Tyrannosaurus */
-    public Tyrannosaurus(String projectName) {
+    public Tyrannosaurus(String projectName,GUI gui) {
         initComponents();
         this.projectName=projectName;
+        this.gui=gui;
         setTitle("Jurassic - "+projectName);
-        jTable1.getColumnModel().getColumn(0).setMaxWidth(50);
+        //setIconImage(Toolkit.getDefaultToolkit().getImage(jurassic.GUI.class.getResource("tyrannosaurus-rex-icon.png")));
+        jTable1.getColumnModel().getColumn(0).setMaxWidth(30);
         jTable1.getColumnModel().getColumn(1).setMaxWidth(120);
         jTable1.getColumnModel().getColumn(1).setPreferredWidth(120);
-        jTable1.getColumnModel().getColumn(2).setMaxWidth(200);
-        jTable1.getColumnModel().getColumn(2).setPreferredWidth(200);
+        jTable1.getColumnModel().getColumn(2).setMaxWidth(250);
+        jTable1.getColumnModel().getColumn(2).setPreferredWidth(250);
+        jTable1.setDefaultRenderer(String.class, new DefaultTableCellRenderer(){
+    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+        JLabel label = new JLabel((String)value);
+        label.setOpaque(true);
+        label.setBackground(table.getBackground());
+        label.setForeground(table.getForeground());
+        if (row==a) {
+            label.setBackground(Color.GREEN);
+            //label.setForeground(table.getSelectionForeground());
+        }
+        if (row==b) {
+            label.setBackground(Color.YELLOW);
+            //label.setForeground(table.getSelectionForeground());
+        }
+        if (row==c) {
+            label.setBackground(Color.RED);
+        }
+        /*if (hasFocus) {
+            label.setBorder(BorderFactory.createLineBorder(Color.RED));
+        }*/
+
+        return label;
+    }
+        });
     }
 
     public void setModel(ArrayList<EvolutionStep> list) {
         this.list = list;
+        c=list.indexOf(gui.new EvolutionStep(gui.currentCheckout,null,null,null));
     }
 
     class TTableModel extends javax.swing.table.AbstractTableModel {
 
         Class[] types = new Class[]{
-            java.lang.Boolean.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
-        };
-        boolean[] canEdit = new boolean[]{
-            true, false, false, false
+            java.lang.Boolean.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
         };
 
         public Class getColumnClass(int columnIndex) {
             return types[columnIndex];
         }
 
-        public boolean isCellEditable(int rowIndex, int columnIndex) {
-            return canEdit[columnIndex];
-        }
 
         public String getColumnName(int col) {
             switch (col) {
                 case 0:
-                    return "Select";
+                    return "";
                 case 1:
                     return "Time";
                 case 2:
                     return "UUID";
                 case 3:
+                    return "Tags";
+                case 4:
                     return "Comment";
             }
             return "";
@@ -77,18 +117,20 @@ public class Tyrannosaurus extends javax.swing.JFrame {
         }
 
         public int getColumnCount() {
-            return 4;
+            return 5;
         }
 
         public Object getValueAt(int rowIndex, int columnIndex) {
             switch (columnIndex) {
                 case 0:
-                    return true;
+                    return (rowIndex==a)||(rowIndex==b);
                 case 1:
                     return list.get(rowIndex).date;
                 case 2:
                     return list.get(rowIndex).sha;
                 case 3:
+                    return list.get(rowIndex).tags;
+                case 4:
                     return list.get(rowIndex).comment;
             }
             return null;
@@ -112,9 +154,13 @@ public class Tyrannosaurus extends javax.swing.JFrame {
         jTextField2 = new javax.swing.JTextField();
         jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
+        jPanel1 = new javax.swing.JPanel();
+        jButton4 = new javax.swing.JButton();
+        jButton5 = new javax.swing.JButton();
+        jPanel2 = new javax.swing.JPanel();
+        jButton3 = new javax.swing.JButton();
+        jPanel3 = new javax.swing.JPanel();
         jButton2 = new javax.swing.JButton();
-        jTextField3 = new javax.swing.JTextField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -134,15 +180,94 @@ public class Tyrannosaurus extends javax.swing.JFrame {
 
         jLabel4.setText("n/a");
 
-        jButton1.setText("Show diffs");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        jPanel1.setBorder(javax.swing.BorderFactory.createTitledBorder("A (green)"));
+
+        jButton4.setText("New branch");
+        jButton4.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                jButton4ActionPerformed(evt);
             }
         });
 
+        jButton5.setText("Update");
+        jButton5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton5ActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(jButton5, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jButton4, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jButton4)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButton5)
+                .addContainerGap(40, Short.MAX_VALUE))
+        );
+
+        jPanel2.setBorder(javax.swing.BorderFactory.createTitledBorder("A & B (green&yellow)"));
+
+        jButton3.setText("View diff");
+        jButton3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton3ActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jButton3)
+                .addContainerGap(27, Short.MAX_VALUE))
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jButton3)
+                .addContainerGap(69, Short.MAX_VALUE))
+        );
+
+        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Curr & A (red&green)"));
+
         jButton2.setText("Merge");
-        jButton2.setEnabled(false);
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
+        jPanel3.setLayout(jPanel3Layout);
+        jPanel3Layout.setHorizontalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 84, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        jPanel3Layout.setVerticalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jButton2)
+                .addContainerGap(69, Short.MAX_VALUE))
+        );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -167,10 +292,11 @@ public class Tyrannosaurus extends javax.swing.JFrame {
                             .addComponent(jLabel4)
                             .addComponent(jLabel3)))
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jButton1)
+                        .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
-                        .addComponent(jButton2))
-                    .addComponent(jTextField3, javax.swing.GroupLayout.PREFERRED_SIZE, 716, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -186,13 +312,13 @@ public class Tyrannosaurus extends javax.swing.JFrame {
                     .addComponent(jLabel2)
                     .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel4))
-                .addGap(34, 34, 34)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButton1)
-                    .addComponent(jButton2))
-                .addGap(32, 32, 32)
-                .addComponent(jTextField3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 40, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 359, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
@@ -200,28 +326,82 @@ public class Tyrannosaurus extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    int a=-1;
+    int b=-1;
+    int c=-1;
     private void jTable1MousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MousePressed
+        if (jTable1.getSelectedRow()==a)
+            return;
+        if (jTable1.getSelectedRow()==b)
+            return;
+        b=a;
+        a=jTable1.getSelectedRow();
         jTextField2.setText(jTextField1.getText());
         jLabel4.setText(jLabel3.getText());
-        jTextField1.setText(list.get(jTable1.getSelectedRow()).sha);
-        jLabel3.setText(list.get(jTable1.getSelectedRow()).comment);
+        jTextField1.setText(list.get(a).sha);
+        jLabel3.setText(list.get(a).comment);
+        jTable1.repaint();
     }//GEN-LAST:event_jTable1MousePressed
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        jTextField3.setText("http://127.0.0.1:8080/"+projectName+"/vdiff?from="+jTextField1.getText()+"&to="+jTextField2.getText()+"&detail=1");
-    }//GEN-LAST:event_jButton1ActionPerformed
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+        try {
+            Desktop.getDesktop().browse(new URI("http://127.0.0.1:8080/"+projectName+"/vdiff?from="+jTextField1.getText()+"&to="+jTextField2.getText()+"&detail=1"));
+        } catch (Exception ex) {
+            Logger.getLogger(Tyrannosaurus.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jButton3ActionPerformed
+
+    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+        if (a==-1) return;
+        String branchName = JOptionPane.showInputDialog(this, "Please input new branch name for commit "+list.get(a).sha, "Jurassic", JOptionPane.QUESTION_MESSAGE);
+        if (branchName == null) {
+            return;
+        }
+        /*String basis = JOptionPane.showInputDialog(this, "Please input the check-in basis for the new branch", "Jurassic", JOptionPane.QUESTION_MESSAGE);
+        if (basis == null) {
+            return;
+        }*/
+        Color c = JColorChooser.showDialog(this, "Please choose a color for the new branch", Color.yellow);
+        if (c == null) {
+            return;
+        }
+        BRANCH[3] = branchName;
+        BRANCH[4] = list.get(a).sha;
+        BRANCH[6] = "#" + Integer.toHexString(c.getRGB()).substring(2);
+        gui.exec(BRANCH);
+    }//GEN-LAST:event_jButton4ActionPerformed
+
+    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
+        if (a==-1) return;
+        if (JOptionPane.showConfirmDialog(this, "Are you sure you want to update to version "+list.get(a).sha+"?","Jurassic",JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION) {
+            UPDATE[2] = list.get(a).sha;
+            gui.exec(UPDATE);
+        }
+    }//GEN-LAST:event_jButton5ActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        if (a==-1) return;
+        if (JOptionPane.showConfirmDialog(this, "Are you sure you want to merge current version with "+list.get(a).sha+"?","Jurassic",JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION) {
+            MERGE[2] = list.get(a).sha;
+            gui.exec(MERGE);
+        }
+    }//GEN-LAST:event_jButton2ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
+    private javax.swing.JButton jButton3;
+    private javax.swing.JButton jButton4;
+    private javax.swing.JButton jButton5;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTable1;
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField2;
-    private javax.swing.JTextField jTextField3;
     // End of variables declaration//GEN-END:variables
 }

@@ -25,23 +25,29 @@ import javax.swing.UIManager;
  *
  * @author Michele Marcon
  *
+ * Tyrannosaurus timeline view
+ * Triceratops wiki editor
+ * Brontosaurus issue tracker
+ * Stegosaurus ???
+ * Pterodactyl roadmap planner
+ *
  */
 public class GUI extends javax.swing.JFrame {
 
     String museum;
     String repository = "prova.fossil";
     String currentFossil = "src";
+    public String currentCheckout = null;
     String[] STARTWEBSERVER = new String[]{"fossil", "server", null};
     String[] NEW = new String[]{"fossil", "new", repository};
     String[] OPEN = new String[]{"fossil", "open", repository};
     String[] CLOSE = new String[]{"fossil", "close", repository};
     String[] ADD = new String[]{"fossil", "add", currentFossil};
     String[] STATUS = new String[]{"fossil", "status"};
+    String[] LEAVES = new String[]{"fossil", "leaves"};
     String[] INFO = new String[]{"fossil", "info", null};
     String[] DIFF = new String[]{"fossil", "diff"};
     String[] COMMIT = new String[]{"fossil", "commit", "-m", null};
-    String[] BRANCH = new String[]{"fossil", "branch", "new", null, null, "-bgcolor", null, "--nosign"};
-    String[] UPDATE = new String[]{"fossil", "update", null};
     String[] BACKUP = new String[]{"cmd", "/c", "copy", "*.fossil", "p:\\repositoryJurassic"};
     Process webserver;
     ArrayList<Dinosaur> list = new ArrayList<Dinosaur>();
@@ -125,14 +131,31 @@ public class GUI extends javax.swing.JFrame {
             InputStreamReader isr = new InputStreamReader(is);
             BufferedReader reader = new BufferedReader(isr);
             String rdLine = null;
-            EvolutionStep es = null;
             while ((rdLine = reader.readLine()) != null) {
                 if (rdLine.startsWith("checkout:")) {
                     Scanner sc = new Scanner(rdLine);
                     sc.next();
-                    inspectEvolution(sc.next());
-                    //es=new EvolutionStep(sc.next(), sc.next()+sc.next(),null,null);
+                    currentCheckout = sc.next();
                 }
+            }
+            pb = new ProcessBuilder(LEAVES);
+            pb.directory(new File(museum));
+            process = pb.start();
+            is = process.getInputStream();
+            isr = new InputStreamReader(is);
+            reader = new BufferedReader(isr);
+            rdLine = null;
+            EvolutionStep es = null;
+            while ((rdLine = reader.readLine()) != null) {
+                if ((rdLine.charAt(9) == '[') && (rdLine.charAt(20) == ']')) {
+                    inspectEvolution(rdLine.substring(10, 20));
+                }
+                /*if (rdLine.startsWith("checkout:")) {
+                Scanner sc = new Scanner(rdLine);
+                sc.next();
+                inspectEvolution(sc.next());
+                //es=new EvolutionStep(sc.next(), sc.next()+sc.next(),null,null);
+                }*/
                 /*if (rdLine.startsWith("parent:")){
                 Scanner sc=new Scanner(rdLine);
                 sc.next();
@@ -141,7 +164,7 @@ public class GUI extends javax.swing.JFrame {
                 }*/
                 //evolution.add(es);
             }
-            Tyrannosaurus t = new Tyrannosaurus(list.get(jComboBox1.getSelectedIndex()).name);
+            Tyrannosaurus t = new Tyrannosaurus(list.get(jComboBox1.getSelectedIndex()).name, this);
             t.setModel(evolution);
             t.setVisible(true);
 
@@ -162,7 +185,7 @@ public class GUI extends javax.swing.JFrame {
         EvolutionStep es = null;
         while ((rdLine = reader.readLine()) != null) {
             if (rdLine.startsWith("uuid:")) {
-                es = new EvolutionStep(rdLine.substring(14, 44), rdLine.substring(55, 74), null, null);
+                es = new EvolutionStep(rdLine.substring(14, 54), rdLine.substring(55, 74), null, null);
             }
             if (rdLine.startsWith("parent:")) {
                 Scanner sc = new Scanner(rdLine);
@@ -176,13 +199,15 @@ public class GUI extends javax.swing.JFrame {
                 es.comment = rdLine.substring(14);
             }
         }
-        evolution.add(es);
         System.out.println(es.date + " " + es.sha + " " + es.tags + " " + es.comment);
+        if (!evolution.contains(es)) {
+            evolution.add(es);
+        }
     }
 
     private void setMuseum(String museum) {
         this.museum = museum;
-        setTitle("Jurassic 0.2.0 - " + museum);
+        setTitle("Jurassic 0.2.1 - " + museum);
         STARTWEBSERVER[2] = museum;
     }
 
@@ -230,9 +255,7 @@ public class GUI extends javax.swing.JFrame {
         jEditorPane1 = new javax.swing.JEditorPane();
         jButton4 = new javax.swing.JButton();
         jComboBox1 = new javax.swing.JComboBox();
-        jButton5 = new javax.swing.JButton();
         jButton6 = new javax.swing.JButton();
-        jButton7 = new javax.swing.JButton();
         jButton8 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -261,6 +284,7 @@ public class GUI extends javax.swing.JFrame {
         jScrollPane1.setViewportView(jEditorPane1);
 
         jButton4.setText("Backup");
+        jButton4.setEnabled(false);
         jButton4.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton4ActionPerformed(evt);
@@ -273,24 +297,10 @@ public class GUI extends javax.swing.JFrame {
             }
         });
 
-        jButton5.setText("Update");
-        jButton5.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton5ActionPerformed(evt);
-            }
-        });
-
         jButton6.setText("Diff");
         jButton6.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton6ActionPerformed(evt);
-            }
-        });
-
-        jButton7.setText("New branch");
-        jButton7.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton7ActionPerformed(evt);
             }
         });
 
@@ -313,9 +323,7 @@ public class GUI extends javax.swing.JFrame {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jButton1)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(jButton7)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 101, Short.MAX_VALUE)
                                 .addComponent(jButton2)
                                 .addGap(18, 18, 18)
                                 .addComponent(jButton3)
@@ -327,9 +335,7 @@ public class GUI extends javax.swing.JFrame {
                             .addComponent(jButton8)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jButton6)
-                                .addGap(50, 50, 50)
-                                .addComponent(jButton5)
-                                .addGap(104, 104, 104)
+                                .addGap(221, 221, 221)
                                 .addComponent(jButton4)))))
                 .addContainerGap())
         );
@@ -340,11 +346,9 @@ public class GUI extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton1)
                     .addComponent(jButton4)
-                    .addComponent(jButton5)
                     .addComponent(jButton6)
                     .addComponent(jButton3)
-                    .addComponent(jButton2)
-                    .addComponent(jButton7))
+                    .addComponent(jButton2))
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -383,36 +387,9 @@ public class GUI extends javax.swing.JFrame {
         exec(STATUS);
     }//GEN-LAST:event_jComboBox1ActionPerformed
 
-    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
-        String version = JOptionPane.showInputDialog("Change version to:");
-        if (version != null) {
-            UPDATE[2] = version.trim();
-            exec(UPDATE);
-        }
-    }//GEN-LAST:event_jButton5ActionPerformed
-
     private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
         exec(DIFF);
     }//GEN-LAST:event_jButton6ActionPerformed
-
-    private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
-        String branchName = JOptionPane.showInputDialog(this, "Please input new branch name", "Jurassic", JOptionPane.QUESTION_MESSAGE);
-        if (branchName == null) {
-            return;
-        }
-        String basis = JOptionPane.showInputDialog(this, "Please input the check-in basis for the new branch", "Jurassic", JOptionPane.QUESTION_MESSAGE);
-        if (basis == null) {
-            return;
-        }
-        Color c = JColorChooser.showDialog(this, "Please choose a color for the new branch", Color.yellow);
-        if (c == null) {
-            return;
-        }
-        BRANCH[3] = branchName;
-        BRANCH[4] = basis;
-        BRANCH[6] = "#" + Integer.toHexString(c.getRGB()).substring(2);
-        exec(BRANCH);
-    }//GEN-LAST:event_jButton7ActionPerformed
 
     private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
         checkEvolution();
@@ -438,9 +415,13 @@ public class GUI extends javax.swing.JFrame {
         String source;
 
         Dinosaur(String fossil, String source) {
-            this.name = fossil.substring(0, fossil.length() - 7);
-            this.fossil = fossil;
-            this.source = source;
+            try {
+                this.name = fossil.substring(0, fossil.length() - 7);
+                this.fossil = fossil;
+                this.source = source;
+            } catch (java.lang.StringIndexOutOfBoundsException e) {
+                JOptionPane.showMessageDialog(GUI.this, "Fossil files must have .fossil extension!", "Jurassic", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
@@ -457,15 +438,21 @@ public class GUI extends javax.swing.JFrame {
             this.tags = tags;
             this.comment = comment;
         }
+
+        @Override
+        public boolean equals(Object es) {
+            if (es instanceof EvolutionStep) {
+                return ((EvolutionStep) es).sha.equals(this.sha);
+            }
+            return false;
+        }
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
-    private javax.swing.JButton jButton5;
     private javax.swing.JButton jButton6;
-    private javax.swing.JButton jButton7;
     private javax.swing.JButton jButton8;
     private javax.swing.JComboBox jComboBox1;
     private javax.swing.JEditorPane jEditorPane1;
