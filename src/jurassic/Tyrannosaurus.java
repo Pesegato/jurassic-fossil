@@ -13,17 +13,28 @@ package jurassic;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Desktop;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.Toolkit;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JColorChooser;
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 import jurassic.GUI.EvolutionStep;
+import org.pushingpixels.trident.Timeline;
+import org.pushingpixels.trident.Timeline.RepeatBehavior;
+import org.pushingpixels.trident.TridentConfig;
+import org.pushingpixels.trident.TridentConfig.PulseSource;
+import org.pushingpixels.trident.swing.SwingRepaintTimeline;
 
 /**
  *
@@ -34,52 +45,102 @@ public class Tyrannosaurus extends javax.swing.JFrame {
     ArrayList<EvolutionStep> list;
     String projectName;
     GUI gui;
-
     String[] BRANCH = new String[]{"fossil", "branch", "new", null, null, "-bgcolor", null, "--nosign"};
     String[] UPDATE = new String[]{"fossil", "update", null};
     String[] MERGE = new String[]{"fossil", "merge", null};
 
+    HashSet<String> tags=new HashSet<String>();
+
     /** Creates new form Tyrannosaurus */
-    public Tyrannosaurus(String projectName,GUI gui) {
+    public Tyrannosaurus(String projectName, GUI gui) {
         initComponents();
-        this.projectName=projectName;
-        this.gui=gui;
-        setTitle("Jurassic - "+projectName);
+        this.projectName = projectName;
+        this.gui = gui;
+        setTitle("Jurassic - " + projectName);
         //setIconImage(Toolkit.getDefaultToolkit().getImage(jurassic.GUI.class.getResource("tyrannosaurus-rex-icon.png")));
         jTable1.getColumnModel().getColumn(0).setMaxWidth(30);
         jTable1.getColumnModel().getColumn(1).setMaxWidth(120);
         jTable1.getColumnModel().getColumn(1).setPreferredWidth(120);
         jTable1.getColumnModel().getColumn(2).setMaxWidth(250);
         jTable1.getColumnModel().getColumn(2).setPreferredWidth(250);
-        jTable1.setDefaultRenderer(String.class, new DefaultTableCellRenderer(){
-    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-        JLabel label = new JLabel((String)value);
-        label.setOpaque(true);
-        label.setBackground(table.getBackground());
-        label.setForeground(table.getForeground());
-        if (row==a) {
-            label.setBackground(Color.GREEN);
-            //label.setForeground(table.getSelectionForeground());
-        }
-        if (row==b) {
-            label.setBackground(Color.YELLOW);
-            //label.setForeground(table.getSelectionForeground());
-        }
-        if (row==c) {
-            label.setBackground(Color.RED);
-        }
-        /*if (hasFocus) {
-            label.setBorder(BorderFactory.createLineBorder(Color.RED));
-        }*/
+        jTable1.setDefaultRenderer(String.class, new DefaultTableCellRenderer() {
 
-        return label;
-    }
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                JLabel label = new JLabel((String) value);
+                label.setOpaque(true);
+                label.setBackground(table.getBackground());
+                label.setForeground(table.getForeground());
+                if (row == a) {
+                    label.setBackground(Color.GREEN);
+                    //label.setForeground(table.getSelectionForeground());
+                }
+                if (row == b) {
+                    label.setBackground(Color.YELLOW);
+                    //label.setForeground(table.getSelectionForeground());
+                }
+                if (row == c) {
+                    label.setBackground(Color.RED);
+                }
+                /*if (hasFocus) {
+                label.setBorder(BorderFactory.createLineBorder(Color.RED));
+                }*/
+
+                return label;
+            }
         });
+
+        EvolutionView ev = new EvolutionView();
+        ev.setBounds(0,0,1024,768);
+        jPanel4.add(ev);
     }
 
+        ArrayList<String> s;
     public void setModel(ArrayList<EvolutionStep> list) {
+        Collections.sort(list);
         this.list = list;
-        c=list.indexOf(gui.new EvolutionStep(gui.currentCheckout,null,null,null));
+        for (EvolutionStep s:list)
+            tags.add(s.tags);
+        s=new ArrayList<String>(tags);
+        c = list.indexOf(gui.new EvolutionStep(gui.currentCheckout, null, null, null));
+    }
+
+    class EvolutionView extends JComponent {
+
+        EvolvingDNA[] steps = new EvolvingDNA[40];
+
+        EvolutionView() {
+            TridentConfig.getInstance().setPulseSource(new PulseSource() {
+
+                public void waitUntilNextPulse() {
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(EvolutionView.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            for (int i = 0; i < steps.length; i++) {
+                steps[i] = new EvolvingDNA(i);
+            }
+            Timeline repaint = new SwingRepaintTimeline(this);
+            repaint.playLoop(RepeatBehavior.LOOP);
+        }
+
+        public void paint(Graphics gx) {
+            Graphics2D g = (Graphics2D) gx;
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            for (int i = 0; i < list.size(); i++) {
+                {
+                    steps[i].drawEvolutionStep(g);
+                    g.setColor(Color.BLACK);
+                    g.fillOval(150+s.lastIndexOf(list.get(i).tags)*20, i*30+1, 10, 10);
+                    g.drawString(list.get(i).date, 300, i * 30 + 20);
+                    g.drawString(list.get(i).sha.substring(0,10), 450, i * 30 + 20);
+                    g.drawString(list.get(i).tags, 550, i * 30 + 20);
+                    g.drawString(list.get(i).comment, 650, i * 30 + 20);
+                }
+            }
+        }
     }
 
     class TTableModel extends javax.swing.table.AbstractTableModel {
@@ -91,7 +152,6 @@ public class Tyrannosaurus extends javax.swing.JFrame {
         public Class getColumnClass(int columnIndex) {
             return types[columnIndex];
         }
-
 
         public String getColumnName(int col) {
             switch (col) {
@@ -123,7 +183,7 @@ public class Tyrannosaurus extends javax.swing.JFrame {
         public Object getValueAt(int rowIndex, int columnIndex) {
             switch (columnIndex) {
                 case 0:
-                    return (rowIndex==a)||(rowIndex==b);
+                    return (rowIndex == a) || (rowIndex == b);
                 case 1:
                     return list.get(rowIndex).date;
                 case 2:
@@ -146,8 +206,6 @@ public class Tyrannosaurus extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
         jLabel1 = new javax.swing.JLabel();
         jTextField1 = new javax.swing.JTextField();
         jLabel2 = new javax.swing.JLabel();
@@ -161,16 +219,12 @@ public class Tyrannosaurus extends javax.swing.JFrame {
         jButton3 = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         jButton2 = new javax.swing.JButton();
+        jTabbedPane1 = new javax.swing.JTabbedPane();
+        jPanel4 = new javax.swing.JPanel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jTable1 = new javax.swing.JTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-
-        jTable1.setModel(new TTableModel());
-        jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mousePressed(java.awt.event.MouseEvent evt) {
-                jTable1MousePressed(evt);
-            }
-        });
-        jScrollPane1.setViewportView(jTable1);
 
         jLabel1.setText("Commit A:");
 
@@ -269,6 +323,29 @@ public class Tyrannosaurus extends javax.swing.JFrame {
                 .addContainerGap(69, Short.MAX_VALUE))
         );
 
+        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
+        jPanel4.setLayout(jPanel4Layout);
+        jPanel4Layout.setHorizontalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 1084, Short.MAX_VALUE)
+        );
+        jPanel4Layout.setVerticalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 420, Short.MAX_VALUE)
+        );
+
+        jTabbedPane1.addTab("Evolution view", jPanel4);
+
+        jTable1.setModel(new TTableModel());
+        jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                jTable1MousePressed(evt);
+            }
+        });
+        jScrollPane1.setViewportView(jTable1);
+
+        jTabbedPane1.addTab("Table view", jScrollPane1);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -276,7 +353,7 @@ public class Tyrannosaurus extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 782, Short.MAX_VALUE)
+                    .addComponent(jTabbedPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 1089, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                             .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
@@ -301,7 +378,7 @@ public class Tyrannosaurus extends javax.swing.JFrame {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+            .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
@@ -313,29 +390,29 @@ public class Tyrannosaurus extends javax.swing.JFrame {
                     .addComponent(jTextField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel4))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 359, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 448, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-
-    int a=-1;
-    int b=-1;
-    int c=-1;
+    int a = -1;
+    int b = -1;
+    int c = -1;
     private void jTable1MousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MousePressed
-        if (jTable1.getSelectedRow()==a)
+        if (jTable1.getSelectedRow() == a) {
             return;
-        if (jTable1.getSelectedRow()==b)
+        }
+        if (jTable1.getSelectedRow() == b) {
             return;
-        b=a;
-        a=jTable1.getSelectedRow();
+        }
+        b = a;
+        a = jTable1.getSelectedRow();
         jTextField2.setText(jTextField1.getText());
         jLabel4.setText(jLabel3.getText());
         jTextField1.setText(list.get(a).sha);
@@ -345,21 +422,23 @@ public class Tyrannosaurus extends javax.swing.JFrame {
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
         try {
-            Desktop.getDesktop().browse(new URI("http://127.0.0.1:8080/"+projectName+"/vdiff?from="+jTextField1.getText()+"&to="+jTextField2.getText()+"&detail=1"));
+            Desktop.getDesktop().browse(new URI("http://127.0.0.1:8080/" + projectName + "/vdiff?from=" + jTextField1.getText() + "&to=" + jTextField2.getText() + "&detail=1"));
         } catch (Exception ex) {
             Logger.getLogger(Tyrannosaurus.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jButton3ActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-        if (a==-1) return;
-        String branchName = JOptionPane.showInputDialog(this, "Please input new branch name for commit "+list.get(a).sha, "Jurassic", JOptionPane.QUESTION_MESSAGE);
+        if (a == -1) {
+            return;
+        }
+        String branchName = JOptionPane.showInputDialog(this, "Please input new branch name for commit " + list.get(a).sha, "Jurassic", JOptionPane.QUESTION_MESSAGE);
         if (branchName == null) {
             return;
         }
         /*String basis = JOptionPane.showInputDialog(this, "Please input the check-in basis for the new branch", "Jurassic", JOptionPane.QUESTION_MESSAGE);
         if (basis == null) {
-            return;
+        return;
         }*/
         Color c = JColorChooser.showDialog(this, "Please choose a color for the new branch", Color.yellow);
         if (c == null) {
@@ -372,21 +451,24 @@ public class Tyrannosaurus extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
-        if (a==-1) return;
-        if (JOptionPane.showConfirmDialog(this, "Are you sure you want to update to version "+list.get(a).sha+"?","Jurassic",JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION) {
+        if (a == -1) {
+            return;
+        }
+        if (JOptionPane.showConfirmDialog(this, "Are you sure you want to update to version " + list.get(a).sha + "?", "Jurassic", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
             UPDATE[2] = list.get(a).sha;
             gui.exec(UPDATE);
         }
     }//GEN-LAST:event_jButton5ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        if (a==-1) return;
-        if (JOptionPane.showConfirmDialog(this, "Are you sure you want to merge current version with "+list.get(a).sha+"?","Jurassic",JOptionPane.YES_NO_OPTION)==JOptionPane.YES_OPTION) {
+        if (a == -1) {
+            return;
+        }
+        if (JOptionPane.showConfirmDialog(this, "Are you sure you want to merge current version with " + list.get(a).sha + "?", "Jurassic", JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
             MERGE[2] = list.get(a).sha;
             gui.exec(MERGE);
         }
     }//GEN-LAST:event_jButton2ActionPerformed
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
@@ -399,7 +481,9 @@ public class Tyrannosaurus extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel4;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable jTable1;
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField2;

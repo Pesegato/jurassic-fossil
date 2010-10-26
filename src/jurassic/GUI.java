@@ -6,12 +6,14 @@
  */
 package jurassic;
 
+import java.awt.Desktop;
 import java.awt.Toolkit;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.logging.Level;
@@ -102,19 +104,31 @@ public class GUI extends javax.swing.JFrame {
             } catch (IOException ex) {
                 Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
             }
+            catch (NullPointerException eg)
+                    {
+            System.err.println("Jurassic cannot find some of your repositories.");
+            JOptionPane.showMessageDialog(this, "Jurassic cannot find some of your repositories.","Jurassic",JOptionPane.ERROR_MESSAGE);
+            System.exit(0);
+            }
 
         }
     }
     ArrayList<File> dinos = new ArrayList<File>();
 
     private void huntDinosaur(File park) {
-        for (File f : park.listFiles()) {
-            if (f.getName().equals("_FOSSIL_")) {
-                dinos.add(park);
+        try {
+            for (File f : park.listFiles()) {
+                if (f.getName().equals("_FOSSIL_")) {
+                    dinos.add(park);
+                }
+                if (f.isDirectory()) {
+                    huntDinosaur(f);
+                }
             }
-            if (f.isDirectory()) {
-                huntDinosaur(f);
-            }
+        } catch (NullPointerException e) {
+            System.err.println("You must run Jurassic from the same folder where your .fossil are.");
+            JOptionPane.showMessageDialog(this, "You must run Jurassic from the same folder where your .fossil are.","Jurassic",JOptionPane.ERROR_MESSAGE);
+            System.exit(0);
         }
     }
     ArrayList<EvolutionStep> evolution = new ArrayList<EvolutionStep>();
@@ -206,7 +220,7 @@ public class GUI extends javax.swing.JFrame {
 
     private void setMuseum(String museum) {
         this.museum = museum;
-        setTitle("Jurassic 0.2.1 - " + museum);
+        setTitle("Jurassic 0.2.2 - " + museum);
         STARTWEBSERVER[2] = museum;
     }
 
@@ -257,6 +271,7 @@ public class GUI extends javax.swing.JFrame {
         jButton6 = new javax.swing.JButton();
         jButton8 = new javax.swing.JButton();
         jButton5 = new javax.swing.JButton();
+        jButton7 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -318,6 +333,13 @@ public class GUI extends javax.swing.JFrame {
             }
         });
 
+        jButton7.setText("HTML");
+        jButton7.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton7ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -325,17 +347,18 @@ public class GUI extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 664, Short.MAX_VALUE)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jButton1)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 170, Short.MAX_VALUE)
-                                .addComponent(jButton3)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 191, Short.MAX_VALUE)
+                                .addComponent(jButton3))
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, 242, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(64, 64, 64)))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jButton7)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jButton8)
                             .addGroup(layout.createSequentialGroup()
@@ -359,7 +382,9 @@ public class GUI extends javax.swing.JFrame {
                     .addComponent(jButton3))
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jButton7))
                     .addComponent(jButton8))
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -426,6 +451,14 @@ public class GUI extends javax.swing.JFrame {
         //exec(OPEN);
     }//GEN-LAST:event_jButton5ActionPerformed
 
+    private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
+        try {
+            Desktop.getDesktop().browse(new URI("http://127.0.0.1:8080/" + jComboBox1.getSelectedItem()));
+        } catch (Exception ex) {
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jButton7ActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -456,7 +489,7 @@ public class GUI extends javax.swing.JFrame {
         }
     }
 
-    class EvolutionStep {
+    class EvolutionStep implements Comparable{
 
         String sha;
         String date;
@@ -477,6 +510,9 @@ public class GUI extends javax.swing.JFrame {
             }
             return false;
         }
+        public int compareTo(Object o) {
+            return this.date.compareTo(((EvolutionStep)o).date);
+        }
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
@@ -485,6 +521,7 @@ public class GUI extends javax.swing.JFrame {
     private javax.swing.JButton jButton4;
     private javax.swing.JButton jButton5;
     private javax.swing.JButton jButton6;
+    private javax.swing.JButton jButton7;
     private javax.swing.JButton jButton8;
     private javax.swing.JComboBox jComboBox1;
     private javax.swing.JEditorPane jEditorPane1;
