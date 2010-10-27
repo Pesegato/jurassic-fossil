@@ -103,12 +103,10 @@ public class GUI extends javax.swing.JFrame {
                 list.add(new Dinosaur(new File(fossil).getName(), source.getAbsolutePath()));
             } catch (IOException ex) {
                 Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            catch (NullPointerException eg)
-                    {
-            System.err.println("Jurassic cannot find some of your repositories.");
-            JOptionPane.showMessageDialog(this, "Jurassic cannot find some of your repositories.","Jurassic",JOptionPane.ERROR_MESSAGE);
-            System.exit(0);
+            } catch (NullPointerException eg) {
+                System.err.println("Jurassic cannot find some of your repositories.");
+                JOptionPane.showMessageDialog(this, "Jurassic cannot find some of your repositories.", "Jurassic", JOptionPane.ERROR_MESSAGE);
+                System.exit(0);
             }
 
         }
@@ -127,7 +125,7 @@ public class GUI extends javax.swing.JFrame {
             }
         } catch (NullPointerException e) {
             System.err.println("You must run Jurassic from the same folder where your .fossil are.");
-            JOptionPane.showMessageDialog(this, "You must run Jurassic from the same folder where your .fossil are.","Jurassic",JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "You must run Jurassic from the same folder where your .fossil are.", "Jurassic", JOptionPane.ERROR_MESSAGE);
             System.exit(0);
         }
     }
@@ -159,6 +157,7 @@ public class GUI extends javax.swing.JFrame {
             reader = new BufferedReader(isr);
             rdLine = null;
             EvolutionStep es = null;
+            //arcs.clear();
             while ((rdLine = reader.readLine()) != null) {
                 if ((rdLine.charAt(9) == '[') && (rdLine.charAt(20) == ']')) {
                     inspectEvolution(rdLine.substring(10, 20));
@@ -186,7 +185,7 @@ public class GUI extends javax.swing.JFrame {
         }
     }
 
-    private void inspectEvolution(String sha) throws IOException {
+    private EvolutionStep inspectEvolution(String sha) throws IOException {
         INFO[2] = sha;
         ProcessBuilder pb = new ProcessBuilder(INFO);
         pb.directory(new File(museum));
@@ -203,7 +202,10 @@ public class GUI extends javax.swing.JFrame {
             if (rdLine.startsWith("parent:")) {
                 Scanner sc = new Scanner(rdLine);
                 sc.next();
-                inspectEvolution(sc.next());
+                String parent = sc.next();
+                //arcs.add(new Arc(sha,parent));
+                System.out.println("New arc! " + sha + " " + parent);
+                es.parents.add(inspectEvolution(parent));
             }
             if (rdLine.startsWith("tags:")) {
                 es.tags = rdLine.substring(14);
@@ -216,11 +218,12 @@ public class GUI extends javax.swing.JFrame {
         if (!evolution.contains(es)) {
             evolution.add(es);
         }
+        return es;
     }
 
     private void setMuseum(String museum) {
         this.museum = museum;
-        setTitle("Jurassic 0.2.2 - " + museum);
+        setTitle("Jurassic 0.2.2 TEST - " + museum);
         STARTWEBSERVER[2] = museum;
     }
 
@@ -437,16 +440,18 @@ public class GUI extends javax.swing.JFrame {
         if (name == null) {
             return;
         }
-        if (name.endsWith(".fossil"))
-            NEW[2]=name;
-        else
-            NEW[2]=name+".fossil";
+        if (name.endsWith(".fossil")) {
+            NEW[2] = name;
+        } else {
+            NEW[2] = name + ".fossil";
+        }
         setMuseum(System.getProperty("user.dir"));
         exec(NEW);
-        JFileChooser fc=new JFileChooser(museum);
+        JFileChooser fc = new JFileChooser(museum);
         fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        if (fc.showDialog(this, "Set the source for the repository")==JFileChooser.APPROVE_OPTION)
-        OPEN[2]=name;
+        if (fc.showDialog(this, "Set the source for the repository") == JFileChooser.APPROVE_OPTION) {
+            OPEN[2] = name;
+        }
         setMuseum(fc.getSelectedFile().getAbsolutePath());
         //exec(OPEN);
     }//GEN-LAST:event_jButton5ActionPerformed
@@ -489,12 +494,22 @@ public class GUI extends javax.swing.JFrame {
         }
     }
 
-    class EvolutionStep implements Comparable{
+    /*ArrayList<Arc> arcs=new ArrayList<Arc>();
+    class Arc {
+    EvolutionStep from;
+    EvolutionStep to;
+    Arc(String from, String to){
+    this.from=new EvolutionStep(from,null,null,null);
+    this.to=new EvolutionStep(to,null,null,null);
+    }
+    }*/
+    class EvolutionStep implements Comparable {
 
         String sha;
         String date;
         String tags;
         String comment;
+        ArrayList<EvolutionStep> parents = new ArrayList<EvolutionStep>();
 
         EvolutionStep(String sha, String date, String tags, String comment) {
             this.sha = sha;
@@ -506,12 +521,16 @@ public class GUI extends javax.swing.JFrame {
         @Override
         public boolean equals(Object es) {
             if (es instanceof EvolutionStep) {
-                return ((EvolutionStep) es).sha.equals(this.sha);
+                if (((EvolutionStep) es).sha.length() == (this.sha.length())) {
+                    return (((EvolutionStep) es).sha.equals(this.sha));
+                }
+                return (((EvolutionStep) es).sha.substring(0, 10).equals(this.sha.substring(0, 10)));
             }
             return false;
         }
+
         public int compareTo(Object o) {
-            return this.date.compareTo(((EvolutionStep)o).date);
+            return this.date.compareTo(((EvolutionStep) o).date);
         }
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables

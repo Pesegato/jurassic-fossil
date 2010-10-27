@@ -17,6 +17,9 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,13 +46,13 @@ import org.pushingpixels.trident.swing.SwingRepaintTimeline;
 public class Tyrannosaurus extends javax.swing.JFrame {
 
     ArrayList<EvolutionStep> list;
+    //ArrayList<Arc> arcs;
     String projectName;
     GUI gui;
     String[] BRANCH = new String[]{"fossil", "branch", "new", null, null, "-bgcolor", null, "--nosign"};
     String[] UPDATE = new String[]{"fossil", "update", null};
     String[] MERGE = new String[]{"fossil", "merge", null};
-
-    HashSet<String> tags=new HashSet<String>();
+    HashSet<String> tags = new HashSet<String>();
 
     /** Creates new form Tyrannosaurus */
     public Tyrannosaurus(String projectName, GUI gui) {
@@ -89,19 +92,21 @@ public class Tyrannosaurus extends javax.swing.JFrame {
             }
         });
 
-        EvolutionView ev = new EvolutionView();
-        ev.setBounds(0,0,1024,768);
+        ev.setBounds(0, 0, 1024, 768);
         jPanel4.add(ev);
     }
+    ArrayList<String> s;
+        EvolutionView ev = new EvolutionView();
 
-        ArrayList<String> s;
     public void setModel(ArrayList<EvolutionStep> list) {
         Collections.sort(list);
         this.list = list;
-        for (EvolutionStep s:list)
+        for (EvolutionStep s : list) {
             tags.add(s.tags);
-        s=new ArrayList<String>(tags);
+        }
+        s = new ArrayList<String>(tags);
         c = list.indexOf(gui.new EvolutionStep(gui.currentCheckout, null, null, null));
+        ev.steps[c].isC=true;
     }
 
     class EvolutionView extends JComponent {
@@ -124,20 +129,60 @@ public class Tyrannosaurus extends javax.swing.JFrame {
             }
             Timeline repaint = new SwingRepaintTimeline(this);
             repaint.playLoop(RepeatBehavior.LOOP);
+            this.addMouseListener(new MouseAdapter(){
+                @Override
+    public void mousePressed(MouseEvent e) {
+                    int x = e.getX();
+                    int y = e.getY();
+                    for (int i = 0; i < steps.length; i++) {
+                        if ((y < 30 * (i+1)) && (y > 30 * (i ))) {
+                            steps[i].setClicked(true);
+                            b=a;
+                            a=i;
+                        } else {
+                            steps[i].setClicked(false);
+                        }
+                    }
+    }
+            });
+            this.addMouseMotionListener(new MouseMotionAdapter() {
+
+                @Override
+                public void mouseMoved(MouseEvent e) {
+                    int x = e.getX();
+                    int y = e.getY();
+                    for (int i = 0; i < steps.length; i++) {
+                        if ((y < 30 * (i+1)) && (y > 30 * (i ))) {
+                            steps[i].setRollover(true);
+                        } else {
+                            steps[i].setRollover(false);
+                        }
+                    }
+                }
+            });
         }
 
         public void paint(Graphics gx) {
             Graphics2D g = (Graphics2D) gx;
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            /*for (Arc a:arcs)
+            {
+            g.drawLine(150,list.indexOf(a.from)*30, 200,list.indexOf(a.to)*30);
+            }*/
             for (int i = 0; i < list.size(); i++) {
                 {
                     steps[i].drawEvolutionStep(g);
+                    EvolutionStep es = list.get(i);
                     g.setColor(Color.BLACK);
-                    g.fillOval(150+s.lastIndexOf(list.get(i).tags)*20, i*30+1, 10, 10);
-                    g.drawString(list.get(i).date, 300, i * 30 + 20);
-                    g.drawString(list.get(i).sha.substring(0,10), 450, i * 30 + 20);
-                    g.drawString(list.get(i).tags, 550, i * 30 + 20);
-                    g.drawString(list.get(i).comment, 650, i * 30 + 20);
+                    for (EvolutionStep parent : es.parents) {
+                        g.drawLine(154 + s.indexOf(es.tags) * 20, i * 30 + 15, 154 + s.indexOf(parent.tags) * 20, list.indexOf(parent) * 30 + 15);
+                    }
+                    g.setColor(Color.BLACK);
+                    g.fillOval(150 + s.indexOf(es.tags) * 20, i * 30 + 10, 10, 10);
+                    g.drawString(es.date, 300, i * 30 + 20);
+                    g.drawString(es.sha.substring(0, 10), 450, i * 30 + 20);
+                    g.drawString(es.tags, 550, i * 30 + 20);
+                    g.drawString(es.comment, 650, i * 30 + 20);
                 }
             }
         }
