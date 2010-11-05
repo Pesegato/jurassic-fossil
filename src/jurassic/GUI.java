@@ -21,6 +21,8 @@ import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
+import org.pushingpixels.trident.TridentConfig;
+import org.pushingpixels.trident.TridentConfig.PulseSource;
 
 /**
  *
@@ -35,15 +37,15 @@ import javax.swing.UIManager;
  */
 public class GUI extends javax.swing.JFrame {
 
+    public static final String version = "0.2.3";
     String museum;
     String repository = "prova.fossil";
-    String currentFossil = "src";
     public String currentCheckout = null;
     String[] STARTWEBSERVER = new String[]{"fossil", "server", null};
     String[] NEW = new String[]{"fossil", "new", repository};
     String[] OPEN = new String[]{"fossil", "open", repository};
     String[] CLOSE = new String[]{"fossil", "close", repository};
-    String[] ADD = new String[]{"fossil", "add", currentFossil};
+    //String[] ADD = new String[]{"fossil", "add", null};
     String[] STATUS = new String[]{"fossil", "status"};
     String[] LEAVES = new String[]{"fossil", "leaves"};
     String[] INFO = new String[]{"fossil", "info", null};
@@ -55,6 +57,16 @@ public class GUI extends javax.swing.JFrame {
 
     public GUI() {
         initComponents();
+        TridentConfig.getInstance().setPulseSource(new PulseSource() {
+
+            public void waitUntilNextPulse() {
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
 
         setIconImage(Toolkit.getDefaultToolkit().getImage(jurassic.GUI.class.getResource("JurassicIcon.png")));
         browseFossil();
@@ -223,7 +235,7 @@ public class GUI extends javax.swing.JFrame {
 
     private void setMuseum(String museum) {
         this.museum = museum;
-        setTitle("Jurassic 0.2.2 TEST - " + museum);
+        setTitle("Jurassic " + version + " - " + museum);
         STARTWEBSERVER[2] = museum;
     }
 
@@ -411,7 +423,20 @@ public class GUI extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        exec(ADD);
+        JFileChooser fc = new JFileChooser(museum);
+        fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        fc.setMultiSelectionEnabled(true);
+        if (fc.showDialog(this, "Set the sources to add to the repository") == JFileChooser.APPROVE_OPTION) {
+            File files[] = fc.getSelectedFiles();
+            String[] ADD = new String[2 + files.length];
+            ADD[0] = "fossil";
+            ADD[1] = "add";
+            for (int i = 0; i < files.length; i++) {
+                ADD[i + 2] = files[i].getAbsolutePath();
+            }
+            exec(ADD);
+        }
+
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
@@ -450,10 +475,14 @@ public class GUI extends javax.swing.JFrame {
         JFileChooser fc = new JFileChooser(museum);
         fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         if (fc.showDialog(this, "Set the source for the repository") == JFileChooser.APPROVE_OPTION) {
-            OPEN[2] = name;
+            OPEN[2] = System.getProperty("user.dir") + System.getProperty("file.separator") + NEW[2];
         }
+        Dinosaur d = new Dinosaur(NEW[2], fc.getSelectedFile().getAbsolutePath());
         setMuseum(fc.getSelectedFile().getAbsolutePath());
-        //exec(OPEN);
+        list.add(d);
+        jComboBox1.addItem(d.name);
+        exec(OPEN);
+        jComboBox1.setSelectedItem(d.name);
     }//GEN-LAST:event_jButton5ActionPerformed
 
     private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed

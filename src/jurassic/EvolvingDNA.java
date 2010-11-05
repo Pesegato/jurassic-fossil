@@ -36,18 +36,16 @@ public class EvolvingDNA {
         this.opacity = opacity;
     }
 
-    public void setClicked(boolean thisIsClicked){
-    if (thisIsClicked)
-        isA=true;
-    else
-    {
-        if (isA)
-        {
-            isA=false;
-            isB=true;
-        }
-        else
-            isB=false;
+    public void setClicked(boolean thisIsClicked) {
+        if (thisIsClicked) {
+            isA = true;
+        } else {
+            if (isA) {
+                isA = false;
+                isB = true;
+            } else {
+                isB = false;
+            }
         }
     }
 
@@ -96,7 +94,8 @@ public class EvolvingDNA {
         rolloverTimeline.setDuration(500);
     }
 
-    public void drawEvolutionStep(Graphics2D g) {
+    public void drawEvolutionStep(Graphics2D g, int scrollPos) {
+        int pos = this.pos + scrollPos;
         if (isA) {
             g.setColor(Color.GREEN);
             g.fillRoundRect(0, pos * 30, 1023, 30, 10, 10);
