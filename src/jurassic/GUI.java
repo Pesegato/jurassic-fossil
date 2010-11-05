@@ -23,6 +23,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import org.pushingpixels.substance.api.SubstanceLookAndFeel;
 import org.pushingpixels.substance.api.skin.*;
 import org.pushingpixels.trident.TridentConfig;
@@ -61,17 +62,6 @@ public class GUI extends javax.swing.JFrame {
 
     public GUI() {
         initComponents();
-        TridentConfig.getInstance().setPulseSource(new PulseSource() {
-
-            public void waitUntilNextPulse() {
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException ex) {
-                    Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        });
-        SubstanceLookAndFeel.setSkin(new BusinessBlackSteelSkin());
 
         setIconImage(Toolkit.getDefaultToolkit().getImage(jurassic.GUI.class.getResource("JurassicIcon.png")));
         browseFossil();
@@ -526,14 +516,32 @@ public class GUI extends javax.swing.JFrame {
     /**
      * @param args the command line arguments
      */
-    public static void main(String args[]) throws Exception {
-        //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        JFrame.setDefaultLookAndFeelDecorated(true);
-        JDialog.setDefaultLookAndFeelDecorated(true);
-        System.setProperty("sun.awt.noerasebackground", "true");
+    public static void main(final String args[]) {
         java.awt.EventQueue.invokeLater(new Runnable() {
 
             public void run() {
+                TridentConfig.getInstance().setPulseSource(new PulseSource() {
+
+                    public void waitUntilNextPulse() {
+                        try {
+                            Thread.sleep(10);
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                });
+                if (args.length > 0) {
+                    try {
+                        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                    } catch (Exception ex) {
+                        Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                } else {
+                    JFrame.setDefaultLookAndFeelDecorated(true);
+                    JDialog.setDefaultLookAndFeelDecorated(true);
+                    System.setProperty("sun.awt.noerasebackground", "true");
+                    SubstanceLookAndFeel.setSkin(new BusinessBlackSteelSkin());
+                }
                 new GUI().setVisible(true);
             }
         });
