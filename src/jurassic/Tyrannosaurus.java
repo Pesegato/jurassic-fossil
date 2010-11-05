@@ -17,6 +17,7 @@ import java.awt.Desktop;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
@@ -37,8 +38,6 @@ import javax.swing.table.DefaultTableCellRenderer;
 import jurassic.GUI.EvolutionStep;
 import org.pushingpixels.trident.Timeline;
 import org.pushingpixels.trident.Timeline.RepeatBehavior;
-import org.pushingpixels.trident.TridentConfig;
-import org.pushingpixels.trident.TridentConfig.PulseSource;
 import org.pushingpixels.trident.swing.SwingRepaintTimeline;
 
 /**
@@ -61,7 +60,8 @@ public class Tyrannosaurus extends javax.swing.JFrame {
         initComponents();
         this.projectName = projectName;
         this.gui = gui;
-        setTitle("Jurassic - " + projectName);
+        setTitle("Jurassic "+GUI.version+" - " + projectName);
+        setIconImage(Toolkit.getDefaultToolkit().getImage(jurassic.GUI.class.getResource("JurassicIcon.png")));
         //setIconImage(Toolkit.getDefaultToolkit().getImage(jurassic.GUI.class.getResource("tyrannosaurus-rex-icon.png")));
         jTable1.getColumnModel().getColumn(0).setMaxWidth(30);
         jTable1.getColumnModel().getColumn(1).setMaxWidth(120);
@@ -158,6 +158,8 @@ public class Tyrannosaurus extends javax.swing.JFrame {
                 public void mouseWheelMoved(MouseWheelEvent e) {
                     if (e.getScrollType() == MouseWheelEvent.WHEEL_UNIT_SCROLL) {
                         scrollPos -= e.getUnitsToScroll();
+                        if (scrollPos<0)
+                            scrollPos=0;
                     }
                 }
             });
@@ -188,6 +190,11 @@ public class Tyrannosaurus extends javax.swing.JFrame {
                     g.drawString(es.tags, 550, (scrollPos + i) * 30 + 20);
                     g.drawString(es.comment, 650, (scrollPos + i) * 30 + 20);
                 }
+            }
+            g.setColor(Color.white);
+            for (int i = 0; i < list.size(); i++) {
+                EvolutionStep es = list.get(i);
+                g.fillOval(151 + s.indexOf(es.tags) * 20, 1 + (scrollPos + i) * 30 + 10, 9, 9);
             }
         }
     }
@@ -266,6 +273,7 @@ public class Tyrannosaurus extends javax.swing.JFrame {
         jPanel4 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
+        jButton1 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -381,6 +389,13 @@ public class Tyrannosaurus extends javax.swing.JFrame {
 
         jTabbedPane1.addTab("Table view", jScrollPane1);
 
+        jButton1.setText("HTML");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -394,17 +409,24 @@ public class Tyrannosaurus extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
-                        .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(jButton1)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(44, 44, 44)
+                        .addComponent(jButton1)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 524, Short.MAX_VALUE)
                 .addContainerGap())
@@ -476,7 +498,16 @@ public class Tyrannosaurus extends javax.swing.JFrame {
             gui.exec(MERGE);
         }
     }//GEN-LAST:event_jButton2ActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        try {
+            Desktop.getDesktop().browse(new URI("http://127.0.0.1:8080/" + projectName + "/timeline?n=10&y=ci"));
+        } catch (Exception ex) {
+            Logger.getLogger(Tyrannosaurus.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jButton1ActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
     private javax.swing.JButton jButton4;
