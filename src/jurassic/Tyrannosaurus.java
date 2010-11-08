@@ -103,22 +103,24 @@ public class Tyrannosaurus extends javax.swing.JFrame {
     public void setModel(ArrayList<EvolutionStep> list) {
         Collections.sort(list);
         this.list = list;
+        steps = new EvolvingDNA[list.size()];
+            for (int i = 0; i < steps.length; i++) {
+                steps[i] = new EvolvingDNA(i);
+            }
         for (EvolutionStep s : list) {
             tags.add(s.tags);
         }
         s = new ArrayList<String>(tags);
         c = list.indexOf(gui.new EvolutionStep(gui.currentCheckout, null, null, null));
-        ev.steps[c].isC = true;
+        steps[c].isC = true;
     }
 
+    EvolvingDNA[] steps;
     class EvolutionView extends JComponent {
 
-        EvolvingDNA[] steps = new EvolvingDNA[40];
 
         EvolutionView() {
-            for (int i = 0; i < steps.length; i++) {
-                steps[i] = new EvolvingDNA(i);
-            }
+
             Timeline repaint = new SwingRepaintTimeline(this);
             repaint.playLoop(RepeatBehavior.LOOP);
             this.addMouseListener(new MouseAdapter() {

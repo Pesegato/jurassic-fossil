@@ -23,7 +23,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 import org.pushingpixels.substance.api.SubstanceLookAndFeel;
 import org.pushingpixels.substance.api.skin.*;
 import org.pushingpixels.trident.TridentConfig;
@@ -42,7 +41,7 @@ import org.pushingpixels.trident.TridentConfig.PulseSource;
  */
 public class GUI extends javax.swing.JFrame {
 
-    public static final String version = "0.2.3";
+    public static final String version = "0.2.4";
     String museum;
     String repository = "prova.fossil";
     public String currentCheckout = null;
