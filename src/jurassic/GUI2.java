@@ -475,7 +475,13 @@ public class GUI2 extends JRibbonFrame {
             }
         });
         //if (currentDino == null) {
+try {
             currentDino = list.get(0);
+        } catch (Exception e) {
+            System.err.println("You must run Jurassic from the same folder where your .fossil are.");
+            JOptionPane.showMessageDialog(this, "You must run Jurassic from the same folder where your .fossil are.", "Jurassic", JOptionPane.ERROR_MESSAGE);
+            System.exit(0);
+        }
         //}
     }
 
