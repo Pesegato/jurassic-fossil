@@ -35,7 +35,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
-import jurassic.GUI.EvolutionStep;
+import jurassic.GUI2.EvolutionStep;
 import org.pushingpixels.trident.Timeline;
 import org.pushingpixels.trident.Timeline.RepeatBehavior;
 import org.pushingpixels.trident.swing.SwingRepaintTimeline;
@@ -49,18 +49,18 @@ public class Tyrannosaurus extends javax.swing.JFrame {
     ArrayList<EvolutionStep> list;
     //ArrayList<Arc> arcs;
     String projectName;
-    GUI gui;
+    GUI2 gui;
     String[] BRANCH = new String[]{"fossil", "branch", "new", null, null, "-bgcolor", null, "--nosign"};
     String[] UPDATE = new String[]{"fossil", "update", null};
     String[] MERGE = new String[]{"fossil", "merge", null};
     HashSet<String> tags = new HashSet<String>();
 
     /** Creates new form Tyrannosaurus */
-    public Tyrannosaurus(String projectName, GUI gui) {
+    public Tyrannosaurus(String projectName, GUI2 gui) {
         initComponents();
         this.projectName = projectName;
         this.gui = gui;
-        setTitle("Jurassic "+GUI.version+" - " + projectName);
+        setTitle("Jurassic " + GUI2.version + " - " + projectName);
         setIconImage(Toolkit.getDefaultToolkit().getImage(jurassic.GUI.class.getResource("JurassicIcon.png")));
         //setIconImage(Toolkit.getDefaultToolkit().getImage(jurassic.GUI.class.getResource("tyrannosaurus-rex-icon.png")));
         jTable1.getColumnModel().getColumn(0).setMaxWidth(30);
@@ -104,9 +104,9 @@ public class Tyrannosaurus extends javax.swing.JFrame {
         Collections.sort(list);
         this.list = list;
         steps = new EvolvingDNA[list.size()];
-            for (int i = 0; i < steps.length; i++) {
-                steps[i] = new EvolvingDNA(i);
-            }
+        for (int i = 0; i < steps.length; i++) {
+            steps[i] = new EvolvingDNA(i);
+        }
         for (EvolutionStep s : list) {
             tags.add(s.tags);
         }
@@ -114,10 +114,9 @@ public class Tyrannosaurus extends javax.swing.JFrame {
         c = list.indexOf(gui.new EvolutionStep(gui.currentCheckout, null, null, null));
         steps[c].isC = true;
     }
-
     EvolvingDNA[] steps;
-    class EvolutionView extends JComponent {
 
+    class EvolutionView extends JComponent {
 
         EvolutionView() {
 
@@ -160,8 +159,12 @@ public class Tyrannosaurus extends javax.swing.JFrame {
                 public void mouseWheelMoved(MouseWheelEvent e) {
                     if (e.getScrollType() == MouseWheelEvent.WHEEL_UNIT_SCROLL) {
                         scrollPos -= e.getUnitsToScroll();
-                        if (scrollPos<0)
-                            scrollPos=0;
+                        if (scrollPos < -(list.size() - 5)) {
+                            scrollPos = -(list.size() - 5);
+                        }
+                        if (scrollPos > 0) {
+                            scrollPos = 0;
+                        }
                     }
                 }
             });
@@ -180,12 +183,6 @@ public class Tyrannosaurus extends javax.swing.JFrame {
                     steps[i].drawEvolutionStep(g, scrollPos);
                     EvolutionStep es = list.get(i);
                     g.setColor(Color.BLACK);
-                    for (EvolutionStep parent : es.parents) {
-                        g.setStroke(new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL));
-                        BevelArrows.drawDN(g, 155 + s.indexOf(parent.tags) * 20, (scrollPos + list.indexOf(parent)) * 30 + 15, 155 + s.indexOf(es.tags) * 20, (scrollPos + i) * 30 + 10);
-                        //g.drawLine(154 + s.indexOf(es.tags) * 20, i * 30 + 15, 154 + s.indexOf(parent.tags) * 20, list.indexOf(parent) * 30 + 15);
-                    }
-                    g.setColor(Color.BLACK);
                     g.drawOval(150 + s.indexOf(es.tags) * 20, (scrollPos + i) * 30 + 10, 10, 10);
                     g.drawString(es.date, 300, (scrollPos + i) * 30 + 20);
                     g.drawString(es.sha.substring(0, 10), 450, (scrollPos + i) * 30 + 20);
@@ -193,9 +190,16 @@ public class Tyrannosaurus extends javax.swing.JFrame {
                     g.drawString(es.comment, 650, (scrollPos + i) * 30 + 20);
                 }
             }
-            g.setColor(Color.white);
             for (int i = 0; i < list.size(); i++) {
                 EvolutionStep es = list.get(i);
+                g.setColor(Color.BLACK);
+                for (EvolutionStep parent : es.parents) {
+                    g.setStroke(new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL));
+                    //BevelArrows.drawDN(g, 155 + s.indexOf(parent.tags) * 20, (scrollPos + list.indexOf(parent)) * 30 + 15, 155 + s.indexOf(es.tags) * 20, (scrollPos + i) * 30 + 10);
+                    BevelArrows.drawUP(g, 155 + s.indexOf(parent.tags) * 20, (scrollPos + list.indexOf(parent)) * 30 + 15, 155 + s.indexOf(es.tags) * 20, (scrollPos + i) * 30 + 20);
+                    //g.drawLine(154 + s.indexOf(es.tags) * 20, i * 30 + 15, 154 + s.indexOf(parent.tags) * 20, list.indexOf(parent) * 30 + 15);
+                }
+                g.setColor(Color.white);
                 g.fillOval(151 + s.indexOf(es.tags) * 20, 1 + (scrollPos + i) * 30 + 10, 9, 9);
             }
         }

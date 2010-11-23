@@ -86,7 +86,12 @@ public class BevelArrows {
         g.fill(path);
 
         // move stem back a bit
-        g.draw(new Line2D.Float(startX, startY, endX, veeY + arrowLength * 0.5f));
+        if (startX != endX) {
+            g.draw(new Line2D.Float(startX, startY, endX, startY));
+            g.draw(new Line2D.Float(endX, startY, endX, veeY + arrowLength * 0.5f));
+        } else {
+            g.draw(new Line2D.Float(startX, startY, endX, veeY + arrowLength * 0.5f));
+        }
     }
     // to draw a nice curved arrow, fill a V shape rather than stroking it with lines
 

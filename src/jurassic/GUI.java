@@ -23,6 +23,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
+import jurassic.GUI2.EvolutionStep;
 import org.pushingpixels.substance.api.SubstanceLookAndFeel;
 import org.pushingpixels.substance.api.skin.*;
 import org.pushingpixels.trident.TridentConfig;
@@ -182,7 +183,7 @@ public class GUI extends javax.swing.JFrame {
                 }*/
                 //evolution.add(es);
             }
-            Tyrannosaurus t = new Tyrannosaurus(list.get(jComboBox1.getSelectedIndex()).name, this);
+            Tyrannosaurus t = new Tyrannosaurus(list.get(jComboBox1.getSelectedIndex()).name, null);//this);
             t.setModel(evolution);
             t.setVisible(true);
 
@@ -203,7 +204,7 @@ public class GUI extends javax.swing.JFrame {
         EvolutionStep es = null;
         while ((rdLine = reader.readLine()) != null) {
             if (rdLine.startsWith("uuid:")) {
-                es = new EvolutionStep(rdLine.substring(14, 54), rdLine.substring(55, 74), null, null);
+                es = null;//new EvolutionStep(rdLine.substring(14, 54), rdLine.substring(55, 74), null, null);
             }
             if (rdLine.startsWith("parent:")) {
                 Scanner sc = new Scanner(rdLine);
@@ -563,45 +564,7 @@ public class GUI extends javax.swing.JFrame {
         }
     }
 
-    /*ArrayList<Arc> arcs=new ArrayList<Arc>();
-    class Arc {
-    EvolutionStep from;
-    EvolutionStep to;
-    Arc(String from, String to){
-    this.from=new EvolutionStep(from,null,null,null);
-    this.to=new EvolutionStep(to,null,null,null);
-    }
-    }*/
-    class EvolutionStep implements Comparable {
 
-        String sha;
-        String date;
-        String tags;
-        String comment;
-        ArrayList<EvolutionStep> parents = new ArrayList<EvolutionStep>();
-
-        EvolutionStep(String sha, String date, String tags, String comment) {
-            this.sha = sha;
-            this.date = date;
-            this.tags = tags;
-            this.comment = comment;
-        }
-
-        @Override
-        public boolean equals(Object es) {
-            if (es instanceof EvolutionStep) {
-                if (((EvolutionStep) es).sha.length() == (this.sha.length())) {
-                    return (((EvolutionStep) es).sha.equals(this.sha));
-                }
-                return (((EvolutionStep) es).sha.substring(0, 10).equals(this.sha.substring(0, 10)));
-            }
-            return false;
-        }
-
-        public int compareTo(Object o) {
-            return this.date.compareTo(((EvolutionStep) o).date);
-        }
-    }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
