@@ -31,6 +31,7 @@ import org.pushingpixels.flamingo.api.common.JCommandButton;
 import org.pushingpixels.flamingo.api.common.JCommandButton.CommandButtonKind;
 import org.pushingpixels.flamingo.api.common.JCommandButtonPanel;
 import org.pushingpixels.flamingo.api.common.JCommandMenuButton;
+import org.pushingpixels.flamingo.api.common.RichTooltip;
 import org.pushingpixels.flamingo.api.common.popup.JCommandPopupMenu;
 import org.pushingpixels.flamingo.api.common.popup.JPopupPanel;
 import org.pushingpixels.flamingo.api.common.popup.PopupPanelCallback;
@@ -39,6 +40,8 @@ import org.pushingpixels.flamingo.api.ribbon.resize.CoreRibbonResizePolicies;
 import org.pushingpixels.flamingo.api.ribbon.resize.RibbonBandResizePolicy;
 import org.pushingpixels.substance.api.SubstanceLookAndFeel;
 import org.pushingpixels.substance.api.skin.OfficeBlack2007Skin;
+import org.pushingpixels.substance.api.skin.OfficeBlue2007Skin;
+import org.pushingpixels.substance.api.skin.OfficeSilver2007Skin;
 import org.pushingpixels.trident.TridentConfig;
 import org.pushingpixels.trident.TridentConfig.PulseSource;
 
@@ -48,9 +51,9 @@ import org.pushingpixels.trident.TridentConfig.PulseSource;
  */
 public class GUI2 extends JRibbonFrame {
 
-    public static final String version = "0.3.0";
+    public static final String version = "0.3.1";
     String museum;
-    Dinosaur currentDino;
+    Dinosaur currentDino=new Dinosaur(".fossil",".fossil");
     String repository = "prova.fossil";
     public String currentCheckout = null;
     String[] STARTWEBSERVER = new String[]{"fossil", "server", null};
@@ -75,6 +78,7 @@ public class GUI2 extends JRibbonFrame {
         jComboBox1.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
+                currentDino.name=list.get(jComboBox1.getSelectedIndex()).name;
                 setMuseum(list.get(jComboBox1.getSelectedIndex()).source);
                 exec(STATUS);
             }
@@ -298,9 +302,10 @@ public class GUI2 extends JRibbonFrame {
                     exc.printStackTrace();
                 }
                 final GUI2 c = new GUI2();
-                c.add(c.jEditorPane1);
+                c.add(new JScrollPane(c.jEditorPane1));
                 c.configureRibbon();
                 c.configureApplicationMenu();
+                c.configureTaskBar();
                 c.applyComponentOrientation(ComponentOrientation.getOrientation(Locale.getDefault()));
                 Rectangle r = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
                 c.setPreferredSize(new Dimension(r.width, r.height / 2));
@@ -313,6 +318,24 @@ public class GUI2 extends JRibbonFrame {
 
             }
         });
+    }
+
+	protected void configureTaskBar() {
+		// taskbar components
+		JCommandButton taskbarButtonPaste = new JCommandButton("",
+				 new document_save());
+		taskbarButtonPaste
+				.setCommandButtonKind(CommandButtonKind.ACTION_ONLY);
+		taskbarButtonPaste.addActionListener(new CommitActionListener());
+		taskbarButtonPaste.setPopupCallback(new PopupPanelCallback() {
+			@Override
+			public JPopupPanel getPopupPanel(JCommandButton commandButton) {
+				return new SamplePopupMenu();
+			}
+		});
+		taskbarButtonPaste.setActionRichTooltip(new RichTooltip("Commit", "Performs a fossil commit"));
+        	taskbarButtonPaste.setActionKeyTip("1");
+		this.getRibbon().addTaskbarComponent(taskbarButtonPaste);
     }
 
     protected void configureApplicationMenu() {
@@ -387,18 +410,7 @@ public class GUI2 extends JRibbonFrame {
         RibbonApplicationMenuEntryPrimary amCommit = new RibbonApplicationMenuEntryPrimary(
                 new document_save(),
                 "Commit",
-                new ActionListener() {
-
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        String comment = JOptionPane.showInputDialog(GUI2.this, "Please input a commit comment", "Jurassic", JOptionPane.QUESTION_MESSAGE);
-                        if (comment == null) {
-                            return;
-                        }
-                        COMMIT[3] = comment;
-                        exec(COMMIT);
-                    }
-                }, CommandButtonKind.ACTION_ONLY);
+                new CommitActionListener(), CommandButtonKind.ACTION_ONLY);
         amCommit.setActionKeyTip("C");
         RibbonApplicationMenuEntryPrimary amEntryExit = new RibbonApplicationMenuEntryPrimary(
                 new system_log_out(), "Exit", new ActionListener() {
@@ -729,6 +741,18 @@ try {
                     "Expand button clicked");
         }
     }
+    private class CommitActionListener implements ActionListener {
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        String comment = JOptionPane.showInputDialog(GUI2.this, "Please input a commit comment", "Jurassic", JOptionPane.QUESTION_MESSAGE);
+                        if (comment == null) {
+                            return;
+                        }
+                        COMMIT[3] = comment;
+                        exec(COMMIT);
+                    }
+                }
 
     private class SamplePopupMenu extends JCommandPopupMenu {
 
