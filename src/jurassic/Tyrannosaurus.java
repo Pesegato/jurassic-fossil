@@ -85,11 +85,11 @@ public class Tyrannosaurus extends javax.swing.JFrame {
     HashSet<String> tags = new HashSet<String>();
 
     /** Creates new form Tyrannosaurus */
-    public Tyrannosaurus(String projectName, GUI2 gui) {
+    public Tyrannosaurus(String projectName, String currentBranch, GUI2 gui) {
         initComponents();
         this.projectName = projectName;
         this.gui = gui;
-        setTitle("Jurassic " + GUI2.version + " - " + projectName);
+        setTitle("Jurassic " + GUI2.version + " - " + projectName+"@"+currentBranch);
         setIconImage(Toolkit.getDefaultToolkit().getImage(jurassic.GUI.class.getResource("JurassicIcon.png")));
         //setIconImage(Toolkit.getDefaultToolkit().getImage(jurassic.GUI.class.getResource("tyrannosaurus-rex-icon.png")));
         jTable1.getColumnModel().getColumn(0).setMaxWidth(30);

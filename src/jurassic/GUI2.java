@@ -34,6 +34,7 @@
 package jurassic;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.ComponentOrientation;
 import java.awt.Desktop;
 import java.awt.Dimension;
@@ -80,9 +81,9 @@ import org.pushingpixels.trident.TridentConfig.PulseSource;
  */
 public class GUI2 extends JRibbonFrame {
 
-    public static final String version = "0.3.1";
+    public static final String version = "0.3.2";
     String museum;
-    Dinosaur currentDino=new Dinosaur(".fossil",".fossil");
+    Dinosaur currentDino = new Dinosaur(".fossil", ".fossil","?");
     String repository = "prova.fossil";
     public String currentCheckout = null;
     String[] STARTWEBSERVER = new String[]{"fossil", "server", null};
@@ -95,6 +96,7 @@ public class GUI2 extends JRibbonFrame {
     String[] INFO = new String[]{"fossil", "info", null};
     String[] DIFF = new String[]{"fossil", "diff"};
     String[] COMMIT = new String[]{"fossil", "commit", "-m", null};
+    String[] SPECIALCOMMIT = new String[]{"fossil", "commit", "-m", null, "--branch", null, "--bgcolor", null};
     String[] BACKUP = new String[]{"cmd", "/c", "copy", "*.fossil", "p:\\repositoryJurassic"};
     Process webserver;
     ArrayList<Dinosaur> list = new ArrayList<Dinosaur>();
@@ -107,7 +109,8 @@ public class GUI2 extends JRibbonFrame {
         jComboBox1.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
-                currentDino.name=list.get(jComboBox1.getSelectedIndex()).name;
+                currentDino.name = list.get(jComboBox1.getSelectedIndex()).name;
+                currentDino.currentBranch = list.get(jComboBox1.getSelectedIndex()).currentBranch;
                 setMuseum(list.get(jComboBox1.getSelectedIndex()).source);
                 exec(STATUS);
             }
@@ -148,12 +151,27 @@ public class GUI2 extends JRibbonFrame {
                 Process process = pb.start();
                 InputStream is = process.getInputStream();
                 InputStreamReader isr = new InputStreamReader(is);
-                String fossil = new BufferedReader(isr).readLine().substring(14);
+                //String fossil = new BufferedReader(isr).readLine().substring(14);
+                BufferedReader reader=new BufferedReader(isr);
+                String rdLine = null;
+                String fossil=null,currentBranch=null;
+                while ((rdLine = reader.readLine()) != null) {
+                if (rdLine.startsWith("repository:")) {
+                    Scanner sc = new Scanner(rdLine);
+                    sc.next();
+                    fossil = sc.next();
+                }
+                if (rdLine.startsWith("tags:")) {
+                    Scanner sc = new Scanner(rdLine);
+                    sc.next();
+                    currentBranch = sc.next();
+                }
+            }
                 /*try {
                 process.waitFor();
                 } catch (final InterruptedException e) { }*/
                 System.out.println(fossil);
-                list.add(new Dinosaur(new File(fossil).getName(), source.getAbsolutePath()));
+                list.add(new Dinosaur(new File(fossil).getName(), source.getAbsolutePath(),currentBranch));
             } catch (IOException ex) {
                 Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
             } catch (NullPointerException eg) {
@@ -229,7 +247,7 @@ public class GUI2 extends JRibbonFrame {
                 }*/
                 //evolution.add(es);
             }
-            Tyrannosaurus t = new Tyrannosaurus(currentDino.name, this);
+            Tyrannosaurus t = new Tyrannosaurus(currentDino.name,currentDino.currentBranch, this);
             t.setModel(evolution);
             t.setVisible(true);
 
@@ -276,7 +294,7 @@ public class GUI2 extends JRibbonFrame {
 
     private void setMuseum(String museum) {
         this.museum = museum;
-        setTitle("Jurassic " + version + " - " + museum);
+        setTitle("Jurassic " + version + " - " + museum+"@"+currentDino.currentBranch);
         STARTWEBSERVER[2] = museum;
     }
 
@@ -349,22 +367,22 @@ public class GUI2 extends JRibbonFrame {
         });
     }
 
-	protected void configureTaskBar() {
-		// taskbar components
-		JCommandButton taskbarButtonPaste = new JCommandButton("",
-				 new document_save());
-		taskbarButtonPaste
-				.setCommandButtonKind(CommandButtonKind.ACTION_ONLY);
-		taskbarButtonPaste.addActionListener(new CommitActionListener());
-		taskbarButtonPaste.setPopupCallback(new PopupPanelCallback() {
-			@Override
-			public JPopupPanel getPopupPanel(JCommandButton commandButton) {
-				return new SamplePopupMenu();
-			}
-		});
-		taskbarButtonPaste.setActionRichTooltip(new RichTooltip("Commit", "Performs a fossil commit"));
-        	taskbarButtonPaste.setActionKeyTip("1");
-		this.getRibbon().addTaskbarComponent(taskbarButtonPaste);
+    protected void configureTaskBar() {
+        // taskbar components
+        JCommandButton taskbarButtonPaste = new JCommandButton("",
+                new document_save());
+        taskbarButtonPaste.setCommandButtonKind(CommandButtonKind.ACTION_ONLY);
+        taskbarButtonPaste.addActionListener(new CommitActionListener());
+        taskbarButtonPaste.setPopupCallback(new PopupPanelCallback() {
+
+            @Override
+            public JPopupPanel getPopupPanel(JCommandButton commandButton) {
+                return new SamplePopupMenu();
+            }
+        });
+        taskbarButtonPaste.setActionRichTooltip(new RichTooltip("Commit", "Performs a fossil commit"));
+        taskbarButtonPaste.setActionKeyTip("1");
+        this.getRibbon().addTaskbarComponent(taskbarButtonPaste);
     }
 
     protected void configureApplicationMenu() {
@@ -391,7 +409,7 @@ public class GUI2 extends JRibbonFrame {
                         if (fc.showDialog(GUI2.this, "Set the source for the repository") == JFileChooser.APPROVE_OPTION) {
                             OPEN[2] = System.getProperty("user.dir") + System.getProperty("file.separator") + NEW[2];
                         }
-                        Dinosaur d = new Dinosaur(NEW[2], fc.getSelectedFile().getAbsolutePath());
+                        Dinosaur d = new Dinosaur(NEW[2], fc.getSelectedFile().getAbsolutePath(),"trunk");
                         setMuseum(fc.getSelectedFile().getAbsolutePath());
                         list.add(d);
                         jComboBox1.addItem(d.name);
@@ -439,8 +457,21 @@ public class GUI2 extends JRibbonFrame {
         RibbonApplicationMenuEntryPrimary amCommit = new RibbonApplicationMenuEntryPrimary(
                 new document_save(),
                 "Commit",
-                new CommitActionListener(), CommandButtonKind.ACTION_ONLY);
+                new CommitActionListener(), CommandButtonKind.ACTION_AND_POPUP_MAIN_ACTION);
         amCommit.setActionKeyTip("C");
+        amCommit.setPopupKeyTip("S");
+        RibbonApplicationMenuEntrySecondary amCommitDefault = new RibbonApplicationMenuEntrySecondary(
+                new document_save(), "Standard commit", new CommitActionListener(),
+                CommandButtonKind.ACTION_ONLY);
+        amCommitDefault.setDescriptionText("Commit to current branch");
+        amCommitDefault.setActionKeyTip("D");
+        RibbonApplicationMenuEntrySecondary amCommitSpecial = new RibbonApplicationMenuEntrySecondary(
+                new document_save_as(), "Special commit", new SpecialCommitActionListener(),
+                CommandButtonKind.ACTION_ONLY);
+        amCommitSpecial.setDescriptionText("Commit to different branch");
+        amCommitSpecial.setActionKeyTip("S");
+        amCommit.addSecondaryMenuGroup("Type of commit",
+                amCommitDefault, amCommitSpecial);
         RibbonApplicationMenuEntryPrimary amEntryExit = new RibbonApplicationMenuEntryPrimary(
                 new system_log_out(), "Exit", new ActionListener() {
 
@@ -516,7 +547,7 @@ public class GUI2 extends JRibbonFrame {
             }
         });
         //if (currentDino == null) {
-try {
+        try {
             currentDino = list.get(0);
         } catch (Exception e) {
             System.err.println("You must run Jurassic from the same folder where your .fossil are.");
@@ -643,7 +674,7 @@ try {
 
     private RibbonTask configureTicketTask() {
         JRibbonBand editBand = new JRibbonBand("Edit", null);
-        JCommandButton newButton = new JCommandButton("New ticket",new text_html());
+        JCommandButton newButton = new JCommandButton("New ticket", new text_html());
         newButton.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
@@ -770,18 +801,42 @@ try {
                     "Expand button clicked");
         }
     }
+
     private class CommitActionListener implements ActionListener {
 
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        String comment = JOptionPane.showInputDialog(GUI2.this, "Please input a commit comment", "Jurassic", JOptionPane.QUESTION_MESSAGE);
-                        if (comment == null) {
-                            return;
-                        }
-                        COMMIT[3] = comment;
-                        exec(COMMIT);
-                    }
-                }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String comment = JOptionPane.showInputDialog(GUI2.this, "Please input a commit comment", "Jurassic", JOptionPane.QUESTION_MESSAGE);
+            if (comment == null) {
+                return;
+            }
+            COMMIT[3] = comment;
+            exec(COMMIT);
+        }
+    }
+
+    private class SpecialCommitActionListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String branchName = JOptionPane.showInputDialog(GUI2.this, "Please input new branch name", "Jurassic", JOptionPane.QUESTION_MESSAGE);
+            if (branchName == null) {
+                return;
+            }
+            String comment = JOptionPane.showInputDialog(GUI2.this, "Please input a commit comment", "Jurassic", JOptionPane.QUESTION_MESSAGE);
+            if (comment == null) {
+                return;
+            }
+            Color c = JColorChooser.showDialog(GUI2.this, "Please choose a color for the new branch", Color.yellow);
+            if (c == null) {
+                return;
+            }
+            SPECIALCOMMIT[3] = comment;
+            SPECIALCOMMIT[5] = branchName;
+            SPECIALCOMMIT[7] = "#" + Integer.toHexString(c.getRGB()).substring(2);
+            exec(SPECIALCOMMIT);
+        }
+    }
 
     private class SamplePopupMenu extends JCommandPopupMenu {
 
@@ -835,12 +890,14 @@ try {
         String name;
         String fossil;
         String source;
+        String currentBranch;
 
-        Dinosaur(String fossil, String source) {
+        Dinosaur(String fossil, String source, String currentBranch) {
             try {
                 this.name = fossil.substring(0, fossil.length() - 7);
                 this.fossil = fossil;
                 this.source = source;
+                this.currentBranch=currentBranch;
             } catch (java.lang.StringIndexOutOfBoundsException e) {
                 JOptionPane.showMessageDialog(GUI2.this, "Fossil files must have .fossil extension!", "Jurassic", JOptionPane.ERROR_MESSAGE);
             }

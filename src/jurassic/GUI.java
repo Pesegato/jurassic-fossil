@@ -211,7 +211,7 @@ public class GUI extends javax.swing.JFrame {
                 }*/
                 //evolution.add(es);
             }
-            Tyrannosaurus t = new Tyrannosaurus(list.get(jComboBox1.getSelectedIndex()).name, null);//this);
+            Tyrannosaurus t = new Tyrannosaurus(list.get(jComboBox1.getSelectedIndex()).name,null, null);//this);
             t.setModel(evolution);
             t.setVisible(true);
 
