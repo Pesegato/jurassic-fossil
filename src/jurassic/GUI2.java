@@ -81,7 +81,7 @@ import org.pushingpixels.trident.TridentConfig.PulseSource;
  */
 public class GUI2 extends JRibbonFrame {
 
-    public static final String version = "0.3.2";
+    public static final String version = "0.3.3";
     String museum;
     Dinosaur currentDino = new Dinosaur(".fossil", ".fossil","?");
     String repository = "prova.fossil";
@@ -96,7 +96,7 @@ public class GUI2 extends JRibbonFrame {
     String[] INFO = new String[]{"fossil", "info", null};
     String[] DIFF = new String[]{"fossil", "diff"};
     String[] COMMIT = new String[]{"fossil", "commit", "-m", null};
-    String[] SPECIALCOMMIT = new String[]{"fossil", "commit", "-m", null, "--branch", null, "--bgcolor", null};
+    String[] SPECIALCOMMIT = new String[]{"fossil", "commit", "-m", null, "--branch", null, "--bgcolor", null, ""};
     String[] BACKUP = new String[]{"cmd", "/c", "copy", "*.fossil", "p:\\repositoryJurassic"};
     Process webserver;
     ArrayList<Dinosaur> list = new ArrayList<Dinosaur>();
@@ -442,6 +442,29 @@ public class GUI2 extends JRibbonFrame {
                     }
                 }, CommandButtonKind.ACTION_ONLY);
         amEntryNew.setActionKeyTip("A");
+        RibbonApplicationMenuEntryPrimary amDel = new RibbonApplicationMenuEntryPrimary(
+                new document_new(),
+                "Delete",
+                new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        JFileChooser fc = new JFileChooser(museum);
+                        fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+                        fc.setMultiSelectionEnabled(true);
+                        if (fc.showDialog(GUI2.this, "Select files to delete") == JFileChooser.APPROVE_OPTION) {
+                            File files[] = fc.getSelectedFiles();
+                            String[] DELETE = new String[2 + files.length];
+                            DELETE[0] = "fossil";
+                            DELETE[1] = "rm";
+                            for (int i = 0; i < files.length; i++) {
+                                DELETE[i + 2] = files[i].getAbsolutePath();
+                            }
+                            exec(DELETE);
+                        }
+                    }
+                }, CommandButtonKind.ACTION_ONLY);
+        amEntryNew.setActionKeyTip("D");        
         RibbonApplicationMenuEntryPrimary amBack = new RibbonApplicationMenuEntryPrimary(
                 new document_save(),
                 "Backup",
@@ -485,6 +508,7 @@ public class GUI2 extends JRibbonFrame {
         RibbonApplicationMenu applicationMenu = new RibbonApplicationMenu();
         applicationMenu.addMenuEntry(amEntryNew);
         applicationMenu.addMenuEntry(amAdd);
+        applicationMenu.addMenuEntry(amDel);
         applicationMenu.addMenuSeparator();
         applicationMenu.addMenuEntry(amBack);
         applicationMenu.addMenuEntry(amCommit);
@@ -831,6 +855,8 @@ public class GUI2 extends JRibbonFrame {
             if (c == null) {
                 return;
             }
+            if (JOptionPane.showConfirmDialog(GUI2.this, "Do you want the branch to be private?", "Jurassic", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE)==JOptionPane.YES_OPTION)
+                SPECIALCOMMIT[8]="--private";
             SPECIALCOMMIT[3] = comment;
             SPECIALCOMMIT[5] = branchName;
             SPECIALCOMMIT[7] = "#" + Integer.toHexString(c.getRGB()).substring(2);
